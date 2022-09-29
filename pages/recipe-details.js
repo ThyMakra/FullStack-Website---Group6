@@ -8,7 +8,6 @@ import Ingredients from "../components/ingredients";
 import Instructions from "../components/instructions";
 import { prisma } from "../lib/prisma";
 
-
 function RecipeDetails ({recipe}) 
 {
   return (

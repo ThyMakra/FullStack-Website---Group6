@@ -7,18 +7,23 @@ class BookmarkStore {
     makeObservable(this);
   }
 
-  @action isBookmarked = (id) => {
-    return this.bookmarks.some((b) => b.id === id);
-  };
-
   @action
   addBookmark = (bookmark) => {
     this.bookmarks.push(bookmark);
   };
 
   @action
+  setBookmark = (bookmarkList) => {
+    this.bookmarks = bookmarkList;
+  };
+
+  @action
   removeBookmark = (bookmark) => {
-    this.bookmarks = this.bookmarks.filter((b) => b.id !== bookmark.id);
+    this.bookmarks = this.bookmarks.filter(b => b !== bookmark);
+  };
+
+  @action clearBookmarks = () => {
+    this.bookmarks = [];
   };
 
   @computed

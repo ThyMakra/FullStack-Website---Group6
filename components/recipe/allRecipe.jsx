@@ -7,8 +7,9 @@ import RecipeCard from "../recipe-card";
 import { fetchRecipe } from "../../lib/helpers";
 
 
-const AllRecipes = ({recipeResultStore, filter, currentPage = 1}) => {
+const AllRecipes = ({recipeResultStore, bookmarkStore, bookmarkList, filter, currentPage = 1}) => {
   const { setTotalRecipeResult } = recipeResultStore;
+  const { setBookmark } = bookmarkStore;
 
   const [recipes, setRecipes] = useState([]);
   const [page, setPage] = useState(currentPage);
@@ -31,6 +32,7 @@ const AllRecipes = ({recipeResultStore, filter, currentPage = 1}) => {
   }
 
   useEffect(() => {
+    setBookmark(bookmarkList);
     const getDefaultRecipe = async () => {
       setHasMore(true);
       setPage(currentPage);
@@ -43,7 +45,7 @@ const AllRecipes = ({recipeResultStore, filter, currentPage = 1}) => {
 
     getDefaultRecipe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, [filter, bookmarkList]);
 
 
   return (
@@ -73,7 +75,7 @@ const AllRecipes = ({recipeResultStore, filter, currentPage = 1}) => {
             visible: { opacity: 1, scale: 1 },
           }}
         >
-          <RecipeCard recipe={recipe} />
+          <RecipeCard recipe={recipe} bookmarked={bookmarkList?.includes(recipe.id) ?? false} bookmarkList={bookmarkList} />
         </motion.div>
     ))}
     </InfiniteScroll>
@@ -83,4 +85,5 @@ const AllRecipes = ({recipeResultStore, filter, currentPage = 1}) => {
 
 export default inject(
   "recipeResultStore",
+  "bookmarkStore"
 )( observer( AllRecipes ) );

@@ -9,26 +9,36 @@ import { useEffect, useState } from "react";
 import { inject, observer } from "mobx-react";
 import { motion } from "framer-motion";
 import { makeRelatedFilterMany } from "../lib/helpers";
+import useAuth from "../lib/hook/AuthProvider";
 
 function RecipesResult ( {
   ingredientStore,
   recipeResultStore,
 } )
 {
+  const { getDocument, user } = useAuth();
   const { totalRecipeResult } = recipeResultStore;
   const { selectedIngredientIds } = ingredientStore;
 
   const [ recipeFilter, setRecipeFilter ] = useState( {} );
+  const [ bookmarkList, setBookmarkList ] = useState(null);
 
   useEffect( () =>
   {
+    // get bookmark list from Firestore
+    const setBookmarkProp = async () => {
+      const userDoc = await getDocument();
+      setBookmarkList(userDoc.bookmarks ?? []);
+    }
+    setBookmarkProp();
+
     /* NOTE:
       - for now query "some", should ask other if we should use "every"
     */
     setRecipeFilter( makeRelatedFilterMany( 'ingredients', selectedIngredientIds ) );
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ totalRecipeResult, selectedIngredientIds ] );
+  }, [ totalRecipeResult, selectedIngredientIds, user ] );
 
   return (
     <>
@@ -60,10 +70,10 @@ function RecipesResult ( {
             </h2>
           </div>
 
-          <AllRecipes filter={ recipeFilter } currentPage={ 1 } />
+          <AllRecipes filter={ recipeFilter } currentPage={ 1 }  bookmarkList={ bookmarkList } />
 
           {/* Ingredient List */ }
-          <div className="fixed bottom-10 left-5 sm:left-10">
+          <div className="fixed bottom-5 sm:bottom-7 left-5 sm:left-10">
             <IngredientList text="Select Ingredients" />
           </div>
         </main>

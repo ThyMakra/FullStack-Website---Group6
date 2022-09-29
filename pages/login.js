@@ -2,10 +2,9 @@ import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import Router, { useRouter } from "next/router";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { authentication } from "../firebase.config";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { useRouter } from "next/router";
+import { motion, AnimatePresence} from "framer-motion";
+import useAuth from "../lib/hook/AuthProvider";
 
 const variants = {
   fadeIn: {
@@ -36,7 +35,6 @@ const variants = {
 
 function Login() {
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
   const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = (e) => {
@@ -44,17 +42,12 @@ function Login() {
     router.push("/");
   };
 
-  const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(authentication, provider)
-      .then((res) => {
-        console.log(res);
-        router.push("/");
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  };
+  const { loginWithGoogle } = useAuth();
+
+  const signInWithGoogle = async () => {
+    await loginWithGoogle();
+    router.push("/");
+  }
 
   return (
     <>
@@ -201,12 +194,23 @@ function Login() {
               <motion.button
                 type="button"
                 onClick={signInWithGoogle}
-                className="inline-block px-5 py-3 text-sm font-medium text-accent bg-primary rounded-lg"
+                className="px-5 py-2 text-sm font-medium text-accent bg-primary rounded-lg flex items-center justify-center"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                Sign In with Google
+                <svg
+                  className="bi bi-google w-7 h-7 mt-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z"
+                    fill="white"
+                  ></path>
+                </svg>
+                <span className="pl-2">Sign In with Google</span>
               </motion.button>
             </form>
           </div>

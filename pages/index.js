@@ -3,6 +3,7 @@ import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import IngredientTabs from "../components/ingredient-tabs.js";
 import IngredientList from "../components/ingredient-list.js";
+import ScrollTop from "../components/scroll-top";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { prisma } from "../lib/prisma";
@@ -13,12 +14,10 @@ function Home ( { dbIngredientCategory }, props )
 {
   const [ ingreFilter, setIngreFilter ] = useState( {} );
 
-  useEffect( () => { }, [] );
-
   return (
     <>
       <Head>
-        <title>Home</title>
+        <title>Ingredeck</title>
         <meta name="description" content="Ingredient Checklists" />
         <link rel="icon" href="/favicon.ico?" />
       </Head>
@@ -48,10 +47,11 @@ function Home ( { dbIngredientCategory }, props )
           </div>
 
           {/* Ingredient List */}
-          <div className="fixed bottom-7 lg:bottom-24 right-5 sm:right-10">
+          <div className="fixed bottom-5 sm:bottom-7 2xl:bottom-24 left-5 sm:left-10">
             <IngredientList text="Find Recipes" />
           </div>
 
+          <ScrollTop />
           <Footer />
         </motion.div>
       </AnimatePresence>

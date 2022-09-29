@@ -1,21 +1,44 @@
-import Image from "next/image";
-import PropTypes from "prop-types";
+import { useEffect, useState } from "react";
 import { inject, observer } from "mobx-react";
-import Router, { useRouter } from "next/router";
+import { useRouter } from "next/router";
+import PropTypes from "prop-types";
+import useAuth from "../lib/hook/AuthProvider";
 
-function RecipesCard({ bookmarkStore, recipe }) {
+function RecipesCard({ bookmarkStore, recipe, bookmarked, bookmarkList }) {
   const router = useRouter();
-  const { bookmarks, isBookmarked, addBookmark, removeBookmark } = bookmarkStore;
+  const { bookmarks, addBookmark, removeBookmark } = bookmarkStore;
+  const [isBookmarked, setIsBookmarked] = useState(bookmarked);
   const item = recipe;
 
-  function addNewBookmark() {
-    // console.log("addNewBookmark", item);
-    addBookmark(item);
+  const { user, mergeDocument } = useAuth();
+
+  useEffect(() => {
+    if (bookmarked != isBookmarked) {
+      setIsBookmarked(bookmarked);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookmarked]);
+
+  const checkForLoggedIn = () => {
+    if (!user) router.push("/login");
   }
 
-  function clearBookmark() {
-    // console.log("clearBookmark", item);
-    removeBookmark(item);
+  const getUnique = (list) => Array.from(new Set(list))
+
+  async  function toggleBookmark(e) {
+    checkForLoggedIn();
+    // wait for firestore to finish querying doc
+    if (bookmarkList === null) return;
+    setIsBookmarked(!isBookmarked);
+
+    const isSelected = e.target.checked;
+    if (isSelected) {
+      await mergeDocument(getUnique([...bookmarks, item.id]));
+      addBookmark(item.id);
+    } else {
+      await mergeDocument(getUnique(bookmarks.filter(recipe => recipe != item.id)));
+      removeBookmark(item.id);
+    }
   }
 
   return (
@@ -29,8 +52,6 @@ function RecipesCard({ bookmarkStore, recipe }) {
       >
         <img
           src={recipe.imageLink}
-          // width={216}
-          // height={216}
           className="w-36 sm:w-40 lg:w-52 h-52"
           alt={recipe.name}
         />
@@ -44,7 +65,8 @@ function RecipesCard({ bookmarkStore, recipe }) {
             <input
               type="checkbox"
               style={{ opacity: 0 }}
-              defaultChecked={isBookmarked(recipe.id)}
+              checked={isBookmarked}
+              onChange={toggleBookmark}
             />
 
             {/* Bookmark Add */}
@@ -53,7 +75,6 @@ function RecipesCard({ bookmarkStore, recipe }) {
               xmlns="http://www.w3.org/2000/svg"
               fill="currentColor"
               viewBox="0 0 16 16"
-              onClick={clearBookmark}
             >
               <path
                 d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"
@@ -71,7 +92,6 @@ function RecipesCard({ bookmarkStore, recipe }) {
               xmlns="http://www.w3.org/2000/svg"
               fill="currentColor"
               viewBox="0 0 16 16"
-              onClick={addNewBookmark}
             >
               <path
                 fillRule="evenodd"
@@ -138,17 +158,7 @@ function RecipesCard({ bookmarkStore, recipe }) {
 
 RecipesCard.propTypes = {
   recipe: PropTypes.object,
-  // onClick: PropTypes.func
 };
 
-RecipesCard.defaultProps = {
-  recipe: {
-    id: 0,
-    title: "Kokos Curry",
-    calories: 320,
-    time: 45,
-  },
-  // onClick: function(){ alert("Hello"); }
-};
 
 export default inject("bookmarkStore")(observer(RecipesCard));

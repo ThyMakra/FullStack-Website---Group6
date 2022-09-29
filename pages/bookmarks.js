@@ -1,14 +1,51 @@
+import { motion } from "framer-motion";
+import { inject, observer } from "mobx-react";
 import Head from "next/head";
+import { useEffect, useState } from "react";
+
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import ScrollTop from "../components/scroll-top";
 import BookmarkCard from "../components/bookmark-card";
-import { inject, observer } from "mobx-react";
-import { motion } from "framer-motion";
+import { fetchRecipe, makeFieldFilter } from "../lib/helpers";
+import useAuth from "../lib/hook/AuthProvider";
 
 function Bookmarks ( { bookmarkStore } )
 {
-  const { bookmarks, bookmarkCount } = bookmarkStore;
+  /* NOTE: this page does not have scrollbar */
+  const { bookmarks, setBookmark } = bookmarkStore;
+  const { getDocument, user } = useAuth();
+  const [ bookmarkCount, setBookmarkCount ] = useState(0);
+  const [ allRecipes, setAllRecipes ] = useState([]);
+
+  useEffect( () =>
+  {
+    const getRecipeRecords = async () => {
+      const recipes = await fetchRecipe(
+        1, 
+        makeFieldFilter("id", bookmarks, "in"),
+        {name: 'asc'},
+        1000
+      );
+
+      setAllRecipes(recipes.data);
+    }
+    getRecipeRecords();
+
+    // get bookmark list from Firestore
+    const setBookmarkProp = async () => {
+      const userDoc = await getDocument();
+      const storedBookmarks = userDoc.bookmarks ?? [];
+      setBookmarkCount(storedBookmarks.length);
+
+      if (storedBookmarks.sort().toString() !== bookmarks.sort().toString()) {
+        setBookmark(storedBookmarks);
+      }
+    }
+    setBookmarkProp();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ user, bookmarks ] )
 
   return (
     <>
@@ -62,7 +99,7 @@ function Bookmarks ( { bookmarkStore } )
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 mb-5">
 
-            { bookmarks.map( ( _recipe, index ) =>
+          { allRecipes.map( ( recipe, index ) =>
             {
               return (
                 <motion.div
@@ -77,7 +114,7 @@ function Bookmarks ( { bookmarkStore } )
                     visible: { opacity: 1, scale: 1 },
                   } }
                 >
-                  <BookmarkCard bookmarked={ _recipe } />
+                  <BookmarkCard bookmarked={ recipe } />
                 </motion.div>
               );
             } ) }

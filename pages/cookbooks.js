@@ -1,23 +1,29 @@
 import Head from "next/head";
 import React, { useState, useEffect } from "react";
-import Navbar from "../components/navbar";
 import Footer from "../components/footer";
-import ScrollTop from "../components/scroll-top";
+import Navbar from "../components/navbar";
 import AllRecipes from "../components/recipe/allRecipe";
+import ScrollTop from "../components/scroll-top";
 import SliderFilter from "../components/slider-filter";
-import { prisma } from "../lib/prisma";
 import { makeFieldFilter, makeRelatedFilterMany } from "../lib/helpers";
+import useAuth from "../lib/hook/AuthProvider";
+import { prisma } from "../lib/prisma";
 
 function Cookbooks ( { allRecipeCategories, allCuisines } )
 {
-  const maxCalories = 1702;
-  const maxDuration = 9900 / 60;
+  /* TODO: get max properties from table*/
+  const maxCalories = 1674.94;
+  const maxDuration = 30300 / 60;
+
+  const { getDocument, user } = useAuth();
 
   const [ recipeFilter, setRecipeFilter ] = useState( {} );
   const [ keyword, setKeyword ] = useState( "" );
   const [ categorySelected, setCategorySelected ] = useState( undefined );
-  const [ calories, setCalories ] = useState( maxCalories )
-  const [ duration, setDuration ] = useState( maxDuration )
+  const [ calories, setCalories ] = useState( maxCalories );
+  const [ duration, setDuration ] = useState( maxDuration );
+  /* TODO: find a way to pass this without infinite loop in AllRecipes */
+  const [ bookmarkList, setBookmarkList ] = useState(null);
 
   function handleChangeCalories ( event, value )
   {
@@ -37,6 +43,13 @@ function Cookbooks ( { allRecipeCategories, allCuisines } )
 
   useEffect( () =>
   {
+    // get bookmark list from Firestore
+    const setBookmarkProp = async () => {
+      const userDoc = await getDocument();
+      setBookmarkList(userDoc.bookmarks ?? []);
+    }
+    setBookmarkProp();
+
     if ( keyword !== "" )
     /* NOTE: 
       ask team whether keyword search should be independent like index page
@@ -59,7 +72,7 @@ function Cookbooks ( { allRecipeCategories, allCuisines } )
       setRecipeFilter( withoutName );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ keyword ] )
+  }, [ keyword, user ] )
 
   return (
     <>
@@ -68,7 +81,6 @@ function Cookbooks ( { allRecipeCategories, allCuisines } )
         <meta name="description" content="Recipes" />
         <link rel="icon" href="/cookbooks.ico?" />
       </Head>
-
       <div className="flex flex-col min-h-screen">
         <Navbar />
 
@@ -177,7 +189,7 @@ function Cookbooks ( { allRecipeCategories, allCuisines } )
             </div>
           </div>
 
-          <AllRecipes currentPage={ 1 } filter={ recipeFilter } />
+          <AllRecipes currentPage={ 1 } filter={ recipeFilter } bookmarkList={ bookmarkList } />
         </main>
 
         <ScrollTop />

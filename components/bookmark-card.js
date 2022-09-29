@@ -1,21 +1,27 @@
-import Image from "next/image";
-import Router, { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { inject, observer } from "mobx-react";
 import { motion } from "framer-motion";
+import useAuth from "../lib/hook/AuthProvider";
+import { useEffect } from "react";
 
 function BookmarkCard({ bookmarkStore, bookmarked }) {
   const router = useRouter();
+  const { mergeDocument } = useAuth();
   const { bookmarks, removeBookmark } = bookmarkStore;
 
-  function unBookmarked() {
-    removeBookmark(bookmarked);
+  const getUnique = (list) => Array.from(new Set(list))
+
+  async function unBookmarked() {
+    await mergeDocument(getUnique(bookmarks.filter(recipe => recipe != bookmarked.id)));
+    removeBookmark(bookmarked.id);
   }
+
+  useEffect(() => {}, [bookmarked])
 
   return (
     <motion.div
       className="card w-fit h-fit image-full m-5 shadow dark:shadow-accent"
       whileHover={{ scale: 1.05 }}
-      bookmarkedRecipe
       whileTap={{ scale: 0.95, borderRadius: "10%" }}
     >
       <figure>
@@ -31,7 +37,10 @@ function BookmarkCard({ bookmarkStore, bookmarked }) {
       <div className="card-body p-5" style={{ maxWidth: 250 }}>
         <div
           className="card w-full h-full cursor-pointer"
-          onClick={() => router.push("/recipe-details")}
+          onClick={() => router.push({
+            pathname: "/recipe-details",
+            query: {id: bookmarked.id}
+          })}
         >
           <div className="card-title text-accent hover:text-primary mx-px">
             {bookmarked.name}

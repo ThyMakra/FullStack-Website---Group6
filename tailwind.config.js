@@ -29,7 +29,12 @@ module.exports = {
   },
   darkMode: "class",
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        bounce200: 'bounce 1s infinite 200ms',
+        bounce300: 'bounce 1s infinite 300ms',
+      },
+    },
   },
   plugins: [
     require("@tailwindcss/forms"),
