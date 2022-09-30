@@ -1,12 +1,11 @@
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { inject, observer } from "mobx-react";
 import Head from "next/head";
-import { useEffect, useState } from "react";
-
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import ScrollTop from "../components/scroll-top";
 import BookmarkCard from "../components/bookmark-card";
+import { motion } from "framer-motion";
 import { fetchRecipe, makeFieldFilter } from "../lib/helpers";
 import useAuth from "../lib/hook/AuthProvider";
 

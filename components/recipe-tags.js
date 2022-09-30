@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 
-
 function RecipeTags({recipe}) {
   const categoriesTag = recipe.categories
   const cuisines = recipe.cuisines

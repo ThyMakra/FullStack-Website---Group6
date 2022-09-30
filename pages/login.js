@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { motion, AnimatePresence} from "framer-motion";
 import useAuth from "../lib/hook/AuthProvider";
@@ -37,12 +37,22 @@ function Login() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
-  const onSubmit = (e) => {
+  const { loginWithGoogle, user, error, loginWithEmailPassword, setError } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("")
+
+  const onSubmit = async (e) => {
     e.preventDefault();
-    router.push("/");
+    const data = await loginWithEmailPassword(email, password)
+
+    if(data.user) {
+      router.push("/");
+    }
   };
 
-  const { loginWithGoogle } = useAuth();
+  useEffect(()=> {
+    setError("")
+  },[setError])
 
   const signInWithGoogle = async () => {
     await loginWithGoogle();
@@ -103,6 +113,10 @@ function Login() {
 
                 <div className="relative">
                   <input
+                    value={email}
+                    onChange={(e)=> {
+                      setEmail(e.target.value)
+                    }}
                     type="email"
                     className="w-full p-4 pr-12 text-sm border-base-200 focus:border-primary rounded-lg shadow-sm"
                     placeholder="Enter your Email"
@@ -133,6 +147,10 @@ function Login() {
                 </label>
                 <div className="relative">
                   <input
+                    value={password}
+                    onChange={(e)=> {
+                      setPassword(e.target.value)
+                    }}
                     type={showPassword ? "text" : "password"}
                     className="w-full p-4 pr-12 text-sm border-base-200 focus:border-primary rounded-lg shadow-sm"
                     placeholder="Enter your Password"
@@ -165,6 +183,8 @@ function Login() {
                   </span>
                 </div>
               </div>
+
+              {error ? <div className="font-bold text-error px-3">{error}</div>: <></>}
 
               <motion.div
                 className="flex items-center justify-between max-w-md mx-auto"

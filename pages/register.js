@@ -1,12 +1,11 @@
 import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Router, { useRouter } from "next/router";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-// import { authentication } from "../firebase.config";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { inject, observer } from "mobx-react";
+import useAuth from "../lib/hook/AuthProvider";
 
 const variants = {
   in: {
@@ -50,30 +49,30 @@ const variants = {
   },
 };
 
-function Register({ userStore }) {
-  const { setUser } = userStore;
+function Register ( { userStore } )
+{
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
-  const [showPassword, setShowPassword] = useState(false);
+  const [ showPassword, setShowPassword ] = useState( false );
 
-  const onSubmit = (e) => {
+  const {registerWithEmailPassword, user, error, setError} = useAuth()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("")
+
+  const onSubmit = async (e) => {
     e.preventDefault();
-    router.push("/");
+    const data = await registerWithEmailPassword(email, password)
+    
+    setEmail("")
+    setPassword("")
+    if(!data.error) {
+      router.push( "/" );
+    }
   };
 
-  const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(authentication, provider)
-      .then((res) => {
-        console.log(res);
-        console.log(res.user);
-        setUser(res.user);
-        router.push("/");
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  };
+  useEffect(()=> {
+    setError("")
+  },[])
 
   return (
     <>
@@ -86,10 +85,10 @@ function Register({ userStore }) {
       <AnimatePresence mode="wait">
         <motion.section
           className="relative flex flex-wrap items-center h-screen"
-          variants={!shouldReduceMotion ? variants : null}
+          variants={ variants }
           initial="in"
-          animate={["center", "scaleUp"]}
-          exit={["scaleDown", "out"]}
+          animate={ [ "center", "scaleUp" ] }
+          exit={ [ "scaleDown", "out" ] }
         >
           <div className="relative lg:w-1/2 lg:h-full">
             <Image
@@ -129,6 +128,10 @@ function Register({ userStore }) {
 
                 <div className="relative">
                   <input
+                  value={email}
+                    onChange={(e)=> {
+                      setEmail(e.target.value)
+                    }}
                     type="email"
                     className="w-full p-4 pr-12 text-sm border-base-200 focus:border-primary rounded-lg shadow-sm"
                     placeholder="Enter your Email"
@@ -159,14 +162,18 @@ function Register({ userStore }) {
                 </label>
                 <div className="relative">
                   <input
-                    type={showPassword ? "text" : "password"}
+                  value={password}
+                    onChange={(e)=> {
+                      setPassword(e.target.value)
+                    }}
+                    type={ showPassword ? "text" : "password" }
                     className="w-full p-4 pr-12 text-sm border-base-200 focus:border-primary rounded-lg shadow-sm"
                     placeholder="Enter your Password"
                   />
 
                   <span
                     className="absolute inset-y-0 inline-flex items-center right-4 cursor-pointer"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={ () => setShowPassword( !showPassword ) }
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -191,6 +198,8 @@ function Register({ userStore }) {
                   </span>
                 </div>
               </div>
+              
+              {error ? <div className="font-bold text-error px-1">{error}</div>: <></>}
 
               <motion.div
                 className="flex items-center justify-between max-w-md mx-auto"
@@ -207,39 +216,15 @@ function Register({ userStore }) {
 
                 <motion.button
                   // type="submit"
-                  onClick={onSubmit}
+                  onClick={ onSubmit }
                   className="inline-block px-5 py-3 text-sm font-medium text-accent bg-primary rounded-lg"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  whileHover={ { scale: 1.1 } }
+                  whileTap={ { scale: 0.9 } }
+                  transition={ { type: "spring", stiffness: 400, damping: 17 } }
                 >
                   Register
                 </motion.button>
               </motion.div>
-
-              <motion.button
-                type="button"
-                onClick={signInWithGoogle}
-                className="inline-block px-5 py-3 text-sm font-medium text-accent bg-primary rounded-lg flex items-center justify-center"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <svg
-                  className="bi bi-google text-white w-7 h-7 text-center"
-                  xmlns="http://www.w3.org/2000/svg"
-                  // width="24"
-                  // height="24"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z"
-                    fill="white"
-                  ></path>
-                </svg>
-                <span className="pl-2">Sign In with Google</span>
-              </motion.button>
             </form>
           </div>
         </motion.section>
@@ -248,4 +233,5 @@ function Register({ userStore }) {
   );
 }
 
-export default inject("userStore")(observer(Register));
+// export default inject("userStore")(observer(Register));
+export default Register;
